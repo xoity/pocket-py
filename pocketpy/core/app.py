@@ -47,12 +47,13 @@ class App:
         >>> app.run()
     """
     
-    def __init__(self, title: str = "PocketPy App", **kwargs: Any):
+    def __init__(self, title: str = "PocketPy App", use_pygame: bool = False, **kwargs: Any):
         """
         Initialize a new PocketPy application.
         
         Args:
             title: The title of the application
+            use_pygame: Whether to use Pygame rendering backend
             **kwargs: Additional configuration options
         """
         self.title = title
@@ -61,6 +62,8 @@ class App:
         self._root_widget: Optional[Any] = None
         self._is_running = False
         self._window = None
+        self._use_pygame = use_pygame
+        self._backend = None
     
     def set_view(self, view_class: Type[View]) -> None:
         """
@@ -98,6 +101,23 @@ class App:
             raise RuntimeError("No view or root widget set. Call set_view() or set_root() first.")
         
         self._is_running = True
+        
+        # Use Pygame backend if requested
+        if self._use_pygame:
+            try:
+                from pocketpy.backends.pygame_backend import PygameBackend
+                self._backend = PygameBackend(
+                    width=self.config.get('width', 800),
+                    height=self.config.get('height', 600),
+                    title=self.title
+                )
+                self._backend.run(self)
+                return
+            except ImportError:
+                print("Warning: Pygame not installed. Install with: pip install pygame")
+                print("Falling back to console mode...")
+        
+        # Console mode (original behavior)
         print(f"Starting {self.title}...")
         print(f"Root widget: {self._root_widget}")
         
