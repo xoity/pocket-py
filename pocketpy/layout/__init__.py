@@ -1,1 +1,9 @@
-"""\nLayout module for PocketPy framework\nContains layout containers for organizing widgets\n"""\n\nfrom pocketpy.layout.vbox import VBox\nfrom pocketpy.layout.hbox import HBox\n\n__all__ = ["VBox", "HBox"]
+"""
+Layout module for PocketPy framework
+Contains layout containers for organizing widgets
+"""
+
+from pocketpy.layout.vbox import VBox
+from pocketpy.layout.hbox import HBox
+
+__all__ = ["VBox", "HBox"]
