@@ -38,12 +38,6 @@ dev = [
     "mypy>=1.0",
 ]
 
-[project.urls]
-Homepage = "https://github.com/yourusername/pocketpy"
-Documentation = "https://github.com/yourusername/pocketpy#readme"
-Repository = "https://github.com/yourusername/pocketpy.git"
-Issues = "https://github.com/yourusername/pocketpy/issues"
-
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["pocketpy*"]
