@@ -99,8 +99,18 @@ class PygameBackend:
             self.draw_label(widget_data, surface)
         elif widget_type == 'button':
             self.draw_button(widget_data, surface)
-        elif widget_type in ('vbox', 'hbox'):
+        elif widget_type in ('vbox', 'hbox', 'grid', 'stack'):
             self.draw_layout(widget_data, surface)
+        elif widget_type == 'textinput':
+            self.draw_textinput(widget_data, surface)
+        elif widget_type == 'switch':
+            self.draw_switch(widget_data, surface)
+        elif widget_type == 'slider':
+            self.draw_slider(widget_data, surface)
+        elif widget_type == 'card':
+            self.draw_card(widget_data, surface)
+        elif widget_type == 'divider':
+            self.draw_divider(widget_data, surface)
     
     def draw_label(self, data: Dict[str, Any], surface: pygame.Surface) -> None:
         """
@@ -215,6 +225,161 @@ class PygameBackend:
         for child in children:
             self.draw_widget(child, surface)
     
+    def draw_textinput(self, data: Dict[str, Any], surface: pygame.Surface) -> None:
+        """Draw text input widget"""
+        x, y = data.get('position', (0, 0))
+        width = data.get('width', 200)
+        height = data.get('height', 40)
+        text = data.get('text', '')
+        placeholder = data.get('placeholder', '')
+        bg_color = self.parse_color(data.get('background_color', '#FFFFFF'))
+        border_color = self.parse_color(data.get('border_color', '#C6C6C8'))
+        text_color = self.parse_color(data.get('color', '#000000'))
+        placeholder_color = self.parse_color(data.get('placeholder_color', '#8E8E93'))
+        font_size = data.get('font_size', 16)
+        is_focused = data.get('is_focused', False)
+        padding = data.get('padding', (8, 12))
+        pad_v, pad_h = padding if isinstance(padding, tuple) else (padding, padding)
+        
+        # Draw background
+        pygame.draw.rect(surface, bg_color, (x, y, width, height), border_radius=8)
+        
+        # Draw border (thicker if focused)
+        border_width = 2 if is_focused else 1
+        pygame.draw.rect(surface, border_color, (x, y, width, height), border_width, border_radius=8)
+        
+        # Draw text or placeholder
+        font = self.get_font('sans-serif', font_size)
+        display_text = text if text else placeholder
+        color = text_color if text else placeholder_color
+        
+        if display_text:
+            text_surface = font.render(display_text, True, color)
+            text_x = x + pad_h
+            text_y = y + (height - text_surface.get_height()) // 2
+            surface.blit(text_surface, (text_x, text_y))
+        
+        # Store bounds
+        data['_bounds'] = (x, y, width, height)
+    
+    def draw_switch(self, data: Dict[str, Any], surface: pygame.Surface) -> None:
+        """Draw switch toggle widget"""
+        x, y = data.get('position', (0, 0))
+        width = data.get('width', 51)
+        height = data.get('height', 31)
+        value = data.get('value', False)
+        on_color = self.parse_color(data.get('on_color', '#34C759'))
+        off_color = self.parse_color(data.get('off_color', '#C6C6C8'))
+        thumb_color = self.parse_color(data.get('thumb_color', '#FFFFFF'))
+        disabled = data.get('disabled', False)
+        
+        # Background
+        bg_color = on_color if value else off_color
+        if disabled:
+            bg_color = tuple(min(c + 50, 255) for c in bg_color)
+        
+        pygame.draw.rect(surface, bg_color, (x, y, width, height), border_radius=height//2)
+        
+        # Thumb position
+        thumb_radius = (height - 4) // 2
+        thumb_x = x + width - thumb_radius - 2 if value else x + thumb_radius + 2
+        thumb_y = y + height // 2
+        
+        # Draw thumb shadow
+        pygame.draw.circle(surface, (0, 0, 0, 30), (thumb_x + 1, thumb_y + 1), thumb_radius)
+        
+        # Draw thumb
+        pygame.draw.circle(surface, thumb_color, (thumb_x, thumb_y), thumb_radius)
+        
+        # Store bounds
+        data['_bounds'] = (x, y, width, height)
+    
+    def draw_slider(self, data: Dict[str, Any], surface: pygame.Surface) -> None:
+        """Draw slider widget"""
+        x, y = data.get('position', (0, 0))
+        width = data.get('width', 200)
+        height = data.get('height', 4)
+        percentage = data.get('percentage', 0.5)
+        track_color = self.parse_color(data.get('track_color', '#C6C6C8'))
+        active_color = self.parse_color(data.get('active_color', '#007AFF'))
+        thumb_color = self.parse_color(data.get('thumb_color', '#FFFFFF'))
+        
+        track_y = y + 10
+        
+        # Draw track
+        pygame.draw.rect(surface, track_color, (x, track_y, width, height), border_radius=2)
+        
+        # Draw active portion
+        active_width = int(width * percentage)
+        if active_width > 0:
+            pygame.draw.rect(surface, active_color, (x, track_y, active_width, height), border_radius=2)
+        
+        # Draw thumb
+        thumb_x = x + active_width
+        thumb_y = track_y + height // 2
+        thumb_radius = 10
+        
+        # Thumb shadow
+        pygame.draw.circle(surface, (0, 0, 0, 50), (thumb_x + 1, thumb_y + 1), thumb_radius)
+        
+        # Thumb
+        pygame.draw.circle(surface, thumb_color, (thumb_x, thumb_y), thumb_radius)
+        pygame.draw.circle(surface, active_color, (thumb_x, thumb_y), thumb_radius - 2)
+        
+        # Store bounds
+        data['_bounds'] = (x, y - 10, width, 30)
+    
+    def draw_card(self, data: Dict[str, Any], surface: pygame.Surface) -> None:
+        """Draw card widget"""
+        x, y = data.get('position', (0, 0))
+        width = data.get('width', 300)
+        height = data.get('height', 200)
+        bg_color = self.parse_color(data.get('background_color', '#FFFFFF'))
+        border_radius = data.get('border_radius', 12)
+        elevation = data.get('elevation', 'md')
+        
+        # Shadow based on elevation
+        shadow_offsets = {'none': 0, 'sm': 2, 'md': 4, 'lg': 8, 'xl': 12}
+        shadow_offset = shadow_offsets.get(elevation, 4)
+        
+        if shadow_offset > 0:
+            shadow_rect = pygame.Rect(x + shadow_offset, y + shadow_offset, width, height)
+            pygame.draw.rect(surface, (0, 0, 0, 30), shadow_rect, border_radius=border_radius)
+        
+        # Draw card
+        pygame.draw.rect(surface, bg_color, (x, y, width, height), border_radius=border_radius)
+        
+        # Draw border if specified
+        border_color = data.get('border_color')
+        border_width = data.get('border_width', 0)
+        if border_color and border_width > 0:
+            pygame.draw.rect(surface, self.parse_color(border_color), (x, y, width, height), border_width, border_radius=border_radius)
+        
+        # Draw children
+        children = data.get('children', [])
+        padding = data.get('padding', 16)
+        pad = padding if isinstance(padding, int) else padding[0]
+        
+        for child in children:
+            # Offset children by padding
+            if 'position' in child:
+                child_x, child_y = child['position']
+                child['position'] = (x + pad, y + pad)
+            self.draw_widget(child, surface)
+    
+    def draw_divider(self, data: Dict[str, Any], surface: pygame.Surface) -> None:
+        """Draw divider line"""
+        x, y = data.get('position', (0, 0))
+        orientation = data.get('orientation', 'horizontal')
+        thickness = data.get('thickness', 1)
+        color = self.parse_color(data.get('color', '#E5E5EA'))
+        length = data.get('length', self.width if orientation == 'horizontal' else self.height)
+        
+        if orientation == 'horizontal':
+            pygame.draw.rect(surface, color, (x, y, length, thickness))
+        else:
+            pygame.draw.rect(surface, color, (x, y, thickness, length))
+    
     def draw(self, root_widget_data: Dict[str, Any]) -> None:
         """
         Draw the entire widget tree.
@@ -278,12 +443,26 @@ class PygameBackend:
                 x, y = event.pos
                 hit_widget = self.hit_test(x, y, root_widget_data)
                 
-                if hit_widget and hit_widget.get('type') == 'button':
-                    # Call the button's on_press handler
-                    on_press = hit_widget.get('on_press')
-                    if on_press and callable(on_press):
-                        on_press()
-                        return True  # Trigger redraw
+                if hit_widget:
+                    widget_type = hit_widget.get('type')
+                    
+                    if widget_type == 'button' or widget_type == 'switch':
+                        # Call the on_press handler
+                        on_press = hit_widget.get('on_press')
+                        if on_press and callable(on_press):
+                            on_press()
+                            return True  # Trigger redraw
+                    
+                    elif widget_type == 'slider':
+                        # Handle slider click
+                        on_drag = hit_widget.get('on_drag')
+                        if on_drag and callable(on_drag):
+                            bounds = hit_widget.get('_bounds', (0, 0, 200, 30))
+                            slider_x = bounds[0]
+                            slider_width = bounds[2]
+                            relative_x = x - slider_x
+                            on_drag(relative_x, slider_width)
+                            return True
         
         return True
     

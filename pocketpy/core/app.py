@@ -47,23 +47,43 @@ class App:
         >>> app.run()
     """
     
-    def __init__(self, title: str = "PocketPy App", use_pygame: bool = False, **kwargs: Any):
+    def __init__(
+        self,
+        title: str = "PocketPy App",
+        use_pygame: bool = False,
+        theme: Optional[Any] = None,
+        width: int = 800,
+        height: int = 600,
+        **kwargs: Any
+    ):
         """
         Initialize a new PocketPy application.
         
         Args:
             title: The title of the application
             use_pygame: Whether to use Pygame rendering backend
+            theme: Theme configuration (defaults to light theme)
+            width: Window width in pixels
+            height: Window height in pixels
             **kwargs: Additional configuration options
         """
         self.title = title
         self.config = kwargs
+        self.width = width
+        self.height = height
         self._view: Optional[View] = None
         self._root_widget: Optional[Any] = None
         self._is_running = False
         self._window = None
         self._use_pygame = use_pygame
         self._backend = None
+        
+        # Theme support
+        if theme is None:
+            from pocketpy.core.theme import Theme
+            self.theme = Theme.light()
+        else:
+            self.theme = theme
     
     def set_view(self, view_class: Type[View]) -> None:
         """
