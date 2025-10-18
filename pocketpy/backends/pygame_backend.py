@@ -332,8 +332,8 @@ class PygameBackend:
     def draw_card(self, data: Dict[str, Any], surface: pygame.Surface) -> None:
         """Draw card widget"""
         x, y = data.get('position', (0, 0))
-        width = data.get('width', 300)
-        height = data.get('height', 200)
+        width = data.get('width') or 300
+        height = data.get('height') or 200
         bg_color = self.parse_color(data.get('background_color', '#FFFFFF'))
         border_radius = data.get('border_radius', 12)
         elevation = data.get('elevation', 'md')
@@ -343,8 +343,8 @@ class PygameBackend:
         shadow_offset = shadow_offsets.get(elevation, 4)
         
         if shadow_offset > 0:
-            shadow_rect = pygame.Rect(x + shadow_offset, y + shadow_offset, width, height)
-            pygame.draw.rect(surface, (0, 0, 0, 30), shadow_rect, border_radius=border_radius)
+            shadow_rect = pygame.Rect(int(x + shadow_offset), int(y + shadow_offset), int(width), int(height))
+            pygame.draw.rect(surface, (150, 150, 150), shadow_rect, border_radius=border_radius)
         
         # Draw card
         pygame.draw.rect(surface, bg_color, (x, y, width, height), border_radius=border_radius)

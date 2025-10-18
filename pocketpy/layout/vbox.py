@@ -50,16 +50,24 @@ class VBox(Widget):
         """
         # Calculate positions for children
         current_y = self.y
+        pad_top = 0
+        pad_left = 0
+        
         if self.padding:
-            current_y += self.padding[0] if isinstance(self.padding, tuple) else self.padding
+            if isinstance(self.padding, (int, float)):
+                pad_top = pad_left = self.padding
+            elif isinstance(self.padding, tuple) and len(self.padding) >= 2:
+                pad_top = self.padding[0]
+                pad_left = self.padding[1]
+            elif isinstance(self.padding, tuple) and len(self.padding) == 1:
+                pad_top = pad_left = self.padding[0]
+        
+        current_y += pad_top
         
         for child in self.children:
             # Set child position
-            child.x = self.x
-            if self.padding:
-                child.x += self.padding[1] if len(self.padding) > 1 else self.padding[0]
-            
-            child.y = current_y
+            child.x = self.x + pad_left
+            child.y = int(current_y)
             
             # Calculate next Y position
             child_height = child.height or 0

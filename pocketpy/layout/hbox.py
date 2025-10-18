@@ -50,15 +50,24 @@ class HBox(Widget):
         """
         # Calculate positions for children
         current_x = self.x
+        pad_top = 0
+        pad_left = 0
+        
         if self.padding:
-            current_x += self.padding[1] if len(self.padding) > 1 else self.padding[0]
+            if isinstance(self.padding, (int, float)):
+                pad_top = pad_left = self.padding
+            elif isinstance(self.padding, tuple) and len(self.padding) >= 2:
+                pad_top = self.padding[0]
+                pad_left = self.padding[1]
+            elif isinstance(self.padding, tuple) and len(self.padding) == 1:
+                pad_top = pad_left = self.padding[0]
+        
+        current_x += pad_left
         
         for child in self.children:
             # Set child position
-            child.x = current_x
-            child.y = self.y
-            if self.padding:
-                child.y += self.padding[0] if isinstance(self.padding, tuple) else self.padding
+            child.x = int(current_x)
+            child.y = self.y + pad_top
             
             # Calculate next X position
             child_width = child.width or 0
